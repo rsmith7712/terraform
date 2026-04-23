@@ -1,0 +1,73 @@
+name: Terraform Plan Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Choose terraform action"
+        required: true
+        default: "plan"
+        type: choice
+        options:
+          - plan
+          - apply
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  TF_WORKING_DIR: live/prod
+  AWS_REGION: ${{ vars.AWS_REGION }}
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.TF_WORKING_DIR }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Authenticate to Vault with GitHub OIDC and read secrets
+        if: ${{ vars.VAULT_ADDR != '' }}
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ vars.VAULT_ADDR }}
+          method: jwt
+          path: ${{ vars.VAULT_JWT_PATH }}
+          role: ${{ vars.VAULT_JWT_ROLE }}
+          exportToken: false
+          secrets: |
+            secret/data/github/aws access_key_id | AWS_ACCESS_KEY_ID ;
+            secret/data/github/aws secret_access_key | AWS_SECRET_ACCESS_KEY
+
+      - name: Configure AWS credentials via OIDC
+        if: ${{ vars.AWS_ROLE_TO_ASSUME != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          role-session-name: github-actions-terraform-apply
+
+      - name: Terraform init
+        run: terraform init -backend-config=backend.hcl
+
+      - name: Terraform plan
+        if: ${{ github.event.inputs.action == 'plan' }}
+        run: terraform plan
+
+      - name: Terraform plan to file
+        if: ${{ github.event.inputs.action == 'apply' }}
+        run: terraform plan -out=tfplan
+
+      - name: Terraform apply
+        if: ${{ github.event.inputs.action == 'apply' }}
+        run: terraform apply -auto-approve tfplan
