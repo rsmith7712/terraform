@@ -11,15 +11,7 @@ A production-oriented Terraform repository for AWS with:
 - Checkov Terraform security scanning
 - HashiCorp Vault integration for secret retrieval
 
-## Repository Layout
-
-```text
-bootstrap/      -> one-time backend creation (local state)
-live/prod/      -> production stack using remote state
-modules/        -> reusable Terraform modules
-.github/        -> GitHub Actions workflows
-
-## What This Deploys
+What This Deploys
 - VPC
 - Public subnet
 - Internet gateway
@@ -29,9 +21,17 @@ modules/        -> reusable Terraform modules
 
 A commented-out Application Load Balancer block is included for future expansion.
 
-## Security Model
+Security Model
 - Preferred authentication for GitHub Actions is OIDC to AWS
 - Optional Vault integration uses GitHub OIDC/JWT
 - Sensitive local files are excluded from Git via .gitignore
 - Terraform remote state is stored in encrypted S3 with versioning enabled
 - DynamoDB is used for state locking
+
+## Repository Layout
+
+```text
+bootstrap/      -> one-time backend creation (local state)
+live/prod/      -> production stack using remote state
+modules/        -> reusable Terraform modules
+.github/        -> GitHub Actions workflows
