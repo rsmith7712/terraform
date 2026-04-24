@@ -1,26 +1,54 @@
-# Terraform local data
-.terraform/
-.terraform.lock.hcl
-
-# Terraform state
+# Terraform working directories and state
+**/.terraform/*
 *.tfstate
 *.tfstate.*
-
-# Variable files / secrets
-*.tfvars
-*.tfvars.json
-
-# Plans
-*.tfplan
-
-# Local overrides
+crash.log
+crash.*.log
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
 
-# Crash logs
-crash.log
+# Terraform plans and reports
+*.tfplan
+*.plan
+plan.json
+checkov-report.xml
+checkov-report.json
+infracost-base.json
+infracost-head.json
+infracost.diff.json
+
+# Variable files that may contain sensitive values
+*.auto.tfvars
+*.auto.tfvars.json
+terraform.tfvars
+terraform.tfvars.json
+
+# Local backend overrides/examples copied locally
+backend.hcl
+
+# Sensitive key material
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+tf-key
+tf-key.pub
+
+# OS/editor clutter
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
 
 # Binaries
 *.exe
+
+# Python cache if local tooling is used
+__pycache__/
+*.pyc
+
+# Misc
+*.bak
+*.tmp
