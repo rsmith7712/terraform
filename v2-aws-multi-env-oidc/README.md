@@ -74,12 +74,12 @@ terraform/v2-aws-multi-env-oidc/
 │   │   ├── variables.tf
 │   │   └── versions.tf
 │   └── stage/
-│   │   ├── backend.hcl
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   ├── providers.tf
-│   │   ├── terraform.tfvars
-│   │   ├── variables.tf
+│       ├── backend.hcl
+│       ├── main.tf
+│       ├── outputs.tf
+│       ├── providers.tf
+│       ├── terraform.tfvars
+│       ├── variables.tf
 │       └── versions.tf
 ├── modules/
 │   ├── compute/
