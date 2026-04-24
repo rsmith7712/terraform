@@ -1,0 +1,38 @@
+name: Terraform Apply Prod
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'live/prod/**'
+      - 'modules/**'
+      - '.github/workflows/terraform-apply-prod.yml'
+      - '.github/workflows/terraform-validate-security-cost.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  apply-prod:
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: live/prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          role-session-name: github-actions-terraform-apply-prod
+      - run: terraform init -backend-config=backend.hcl
+      - run: terraform plan -out=tfplan
+      - run: terraform apply -auto-approve tfplan

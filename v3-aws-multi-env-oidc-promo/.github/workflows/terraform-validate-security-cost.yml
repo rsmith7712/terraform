@@ -1,0 +1,131 @@
+name: Terraform Validate Security Cost
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - stage
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  validate-dev:
+    name: validate-dev
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: live/dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          role-session-name: github-actions-terraform-validate-dev
+      - run: terraform init -backend-config=backend.hcl
+      - run: terraform fmt -check -recursive
+      - run: terraform validate
+      - run: terraform plan -out=tfplan
+      - run: terraform show -json tfplan > plan.json
+      - uses: bridgecrewio/checkov-action@master
+        with:
+          directory: live/dev
+          framework: terraform
+          output_format: cli,sarif
+          output_file_path: console,checkov.sarif
+          quiet: true
+          soft_fail: false
+      - if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: live/dev/checkov.sarif
+
+  validate-stage:
+    name: validate-stage
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: live/stage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          role-session-name: github-actions-terraform-validate-stage
+      - run: terraform init -backend-config=backend.hcl
+      - run: terraform fmt -check -recursive
+      - run: terraform validate
+      - run: terraform plan -out=tfplan
+      - run: terraform show -json tfplan > plan.json
+      - uses: bridgecrewio/checkov-action@master
+        with:
+          directory: live/stage
+          framework: terraform
+          output_format: cli,sarif
+          output_file_path: console,checkov.sarif
+          quiet: true
+          soft_fail: false
+      - if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: live/stage/checkov.sarif
+
+  validate-prod:
+    name: validate-prod
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: live/prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          role-session-name: github-actions-terraform-validate-prod
+      - run: terraform init -backend-config=backend.hcl
+      - run: terraform fmt -check -recursive
+      - run: terraform validate
+      - run: terraform plan -out=tfplan
+      - run: terraform show -json tfplan > plan.json
+      - uses: bridgecrewio/checkov-action@master
+        with:
+          directory: live/prod
+          framework: terraform
+          output_format: cli,sarif
+          output_file_path: console,checkov.sarif
+          quiet: true
+          soft_fail: false
+      - if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: live/prod/checkov.sarif
+      - if: github.event_name == 'pull_request'
+        uses: infracost/actions/setup@v3
+      - if: github.event_name == 'pull_request'
+        run: infracost breakdown --path . --format json --out-file infracost.json
+      - if: github.event_name == 'pull_request'
+        uses: infracost/actions/comment@v1
+        with:
+          path: live/prod/infracost.json
+          behavior: update

@@ -1,0 +1,38 @@
+name: Terraform Apply Stage
+
+on:
+  push:
+    branches:
+      - stage
+    paths:
+      - 'live/stage/**'
+      - 'modules/**'
+      - '.github/workflows/terraform-apply-stage.yml'
+      - '.github/workflows/terraform-validate-security-cost.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  apply-stage:
+    runs-on: ubuntu-latest
+    environment: stage
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: live/stage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          role-session-name: github-actions-terraform-apply-stage
+      - run: terraform init -backend-config=backend.hcl
+      - run: terraform plan -out=tfplan
+      - run: terraform apply -auto-approve tfplan

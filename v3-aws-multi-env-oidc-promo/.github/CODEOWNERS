@@ -1,0 +1,9 @@
+# Update these handles to your real GitHub team/user names
+
+* @your-org/platform-team
+
+/.github/workflows/* @your-org/platform-team
+/modules/* @your-org/platform-team
+/live/prod/* @your-org/platform-team @your-org/security-team
+/live/stage/* @your-org/platform-team
+/live/dev/* @your-org/platform-team
