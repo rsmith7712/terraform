@@ -1,0 +1,51 @@
+# Terraform working directories and state
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform plans and reports
+*.tfplan
+*.plan
+plan.json
+checkov-report.xml
+checkov-report.json
+infracost-base.json
+infracost-head.json
+infracost.diff.json
+
+# Variable files that may contain secrets
+*.auto.tfvars
+*.auto.tfvars.json
+terraform.tfvars
+terraform.tfvars.json
+
+# Local backend overrides/examples copied locally
+backend.hcl
+
+# Sensitive key material
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+tf-key
+tf-key.pub
+
+# OS/editor clutter
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python cache if local tooling is used
+__pycache__/
+*.pyc
+
+# Misc
+*.bak
+*.tmp
